@@ -1,0 +1,40 @@
+[
+  {
+    "id": "chain",
+    "type": "chain",
+    "steps": [
+      {"label": "Recon", "ids": "T1595", "detail": "Automated scanning, fuzzing", "status": "detected", "control": "Proxy + firewall IDS"},
+      {"label": "Initial Access", "ids": "T1190, T1078", "detail": "Web exploit, valid accounts", "status": "partial", "control": "Edge IDS; app-layer blind"},
+      {"label": "Persistence", "ids": "T1505.003", "detail": "Web shells, RAT installs", "status": "gap", "control": "No endpoint telemetry"},
+      {"label": "PrivEsc / Creds", "ids": "T1558.003, T1552.005", "detail": "Kerberoast, cloud metadata", "status": "gap", "control": "No cloud or DC logs"},
+      {"label": "Lateral Move", "ids": "T1550, T1021.006", "detail": "PtH, PtT, WinRM", "status": "gap", "control": "No host or DC logs"},
+      {"label": "Collection", "ids": "T1530, T1114.002", "detail": "Cloud storage, mailboxes", "status": "gap", "control": "No cloud, app or email logs"},
+      {"label": "C2 & Exfil", "ids": "T1071.001, T1090", "detail": "LLM API C2, HTTPS exfil", "status": "detected", "control": "Proxy egress visibility", "highlight": true}
+    ]
+  },
+  {
+    "id": "layers",
+    "type": "layers",
+    "attack": "ARTEX intrusion",
+    "target": "Cloud data, Active Directory, 67K PII records",
+    "layers": [
+      {"label": "Network perimeter", "items": "PAN-OS firewall, Bluecoat proxy", "status": "detected"},
+      {"label": "Application layer", "items": "Portal / API record-access logs (absent)", "status": "gap"},
+      {"label": "Identity & cloud", "items": "Entra, CloudTrail, M365, Graph (absent)", "status": "gap"},
+      {"label": "Endpoint", "items": "EDR, host process and file logs (absent)", "status": "gap"}
+    ]
+  },
+  {
+    "id": "matrix",
+    "type": "matrix",
+    "x_label": "Likelihood of going undetected",
+    "y_label": "Business impact",
+    "points": [
+      {"label": "Cloud / SaaS compromise", "x": "High", "y": "High", "highlight": true},
+      {"label": "Endpoint intrusion", "x": "High", "y": "High"},
+      {"label": "App-layer data theft", "x": "High", "y": "Medium"},
+      {"label": "AD / lateral movement", "x": "Medium", "y": "High"},
+      {"label": "C2 / exfil (covered today)", "x": "Low", "y": "High"}
+    ]
+  }
+]

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ARTEX Detection Coverage Gap Assessment</title>
+<meta name="marking" content="TLP:CLEAR">
+<meta name="org" content="Mock Customer · SOC / CTI">
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="doc-kicker">Detection Coverage Assessment</div>
+  <h1>ARTEX TTP Coverage Gap: Where Your Telemetry Sees the Attack, and Where It Does Not</h1>
+  <p class="doc-sub">Your firewall and web proxy cover the two ends of the ARTEX kill chain; the middle and the cloud are unseen.</p>
+  <dl class="meta">
+    <div><dt>Date</dt><dd>17 Nov 2026</dd></div>
+    <div><dt>Reference</dt><dd>DCA-2026-ARTEX-01</dd></div>
+    <div><dt>Audience</dt><dd>SOC Lead, CTI, CISO</dd></div>
+    <div><dt>Scope</dt><dd>OCSF telemetry vs. ARTEX ATT&amp;CK map</dd></div>
+    <div><dt>Distribution</dt><dd>TLP:CLEAR</dd></div>
+  </dl>
+</header>
+
+<section class="bluf">
+  <p class="label">Bottom Line Up Front</p>
+  <p class="verdict">Add endpoint and cloud telemetry before the next ARTEX-class intrusion.</p>
+  <p class="bottom-line">Your telemetry comes from two products: a PAN-OS firewall and a Bluecoat proxy. They detect ARTEX reconnaissance and its outbound C2 and exfiltration, but see nothing on hosts, in Active Directory, or in the cloud. Of roughly 35 ATT&amp;CK techniques attributed to ARTEX, about 26 fall in that blind zone.</p>
+
+  <h3>Recommended Actions</h3>
+  <table class="actions">
+    <thead><tr><th>#</th><th>Action</th><th>Owner</th><th>By</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><strong>Alert on egress to LLM API endpoints</strong> (api.anthropic[.]com, api.deepseek[.]com, open.bigmodel[.]cn, api.x[.]ai) and unfamiliar LLM proxies in proxy logs.</td><td class="owner">SOC</td><td class="by">7 days</td></tr>
+      <tr><td>2</td><td><strong>Alert on sequential enumeration</strong> against login and search endpoints and on structured-data outbound transfers to unapproved destinations.</td><td class="owner">SOC</td><td class="by">14 days</td></tr>
+      <tr><td>3</td><td><strong>Onboard EDR telemetry</strong> (process, file, module from hosts) into the lake to cover web shells, PowerShell and credential theft.</td><td class="owner">SOC Eng</td><td class="by">60 days</td></tr>
+      <tr><td>4</td><td><strong>Ingest cloud and identity audit</strong> (Entra sign-in and audit, CloudTrail, M365, Graph) to cover the supply-chain and cloud kill chain.</td><td class="owner">IAM, Cloud</td><td class="by">90 days</td></tr>
+      <tr><td>5</td><td><strong>Add application-layer logs</strong> with per-session record-access counts on partner and employee portals.</td><td class="owner">App Owners</td><td class="by">90 days</td></tr>
+    </tbody>
+  </table>
+
+  <dl class="assess">
+    <div><dt>Outcome</dt><dd><strong>Coverage gap confirmed</strong> two-thirds of ARTEX techniques unseen</dd></div>
+    <div><dt>Scope</dt><dd><strong>Full telemetry set</strong> two source products in the lake</dd></div>
+    <div><dt>Confidence</dt><dd><strong>High</strong> OCSF volumes directly observed; empty categories confirmed</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2><span class="num">1</span>Key Findings</h2>
+  <ol class="findings">
+    <li><strong>Your telemetry is network-only.</strong> Every OCSF class in the lake is sourced from PAN-OS or Bluecoat. There is no endpoint, identity-provider, cloud, email, or application data. HTTP Activity from the proxy holds 152,285 events, the largest single source by far.<sup>[1]</sup></li>
+    <li><strong>You see the start and the end of an ARTEX intrusion, not the middle.</strong> Recon scanning and outbound C2 and exfiltration cross the proxy and firewall. Persistence, privilege escalation, credential access and lateral movement happen on hosts and in the cloud, where you collect nothing.</li>
+    <li><strong>The cloud and application planes are empty.</strong> The OCSF categories Application Activity and Discovery returned zero events. ARTEX's highest-impact outcomes, a 2,250-tenant supply-chain pivot and theft of 67,000 records, live entirely in these planes.<sup>[2]</sup></li>
+    <li><strong>Two rows overstate your coverage.</strong> The IAM and System Activity events are PAN-OS firewall self-telemetry, not Windows, domain-controller or identity-provider logs. Counting them as identity or host coverage hides the gap.</li>
+    <li><strong>Your one strength is immediately useful.</strong> Outbound calls to LLM API endpoints and high-frequency sequential enumeration are strong ARTEX signals you can detect today with no new data source.<sup>[1,2]</sup></li>
+  </ol>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Your Telemetry Coverage</h2>
+  <p>The lake holds eight OCSF classes from two products. Network Activity dominates; the host, identity, cloud and application planes are absent. Figure 1 shows how an ARTEX intrusion crosses these planes.</p>
+  <table>
+    <caption>OCSF lookup table, aggregated event count by category and class.</caption>
+    <thead><tr><th>OCSF category</th><th>Class</th><th class="num">Events</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Network Activity</td><td>HTTP Activity</td><td class="num">152,285</td><td>Bluecoat Proxy</td></tr>
+      <tr><td>System Activity</td><td>Module Activity</td><td class="num">27,744</td><td>PAN-OS</td></tr>
+      <tr><td>Findings</td><td>Detection Finding</td><td class="num">18,873</td><td>PAN-OS</td></tr>
+      <tr><td>Identity &amp; Access Mgmt</td><td>Entity Management</td><td class="num">8,388</td><td>PAN-OS</td></tr>
+      <tr><td>Findings</td><td>Security Finding</td><td class="num">6,206</td><td>PAN-OS</td></tr>
+      <tr><td>Network Activity</td><td>Network Activity</td><td class="num">6,205</td><td>PAN-OS</td></tr>
+      <tr><td>System Activity</td><td>Device Config State Change</td><td class="num">3,164</td><td>PAN-OS</td></tr>
+      <tr><td>Identity &amp; Access Mgmt</td><td>Authentication</td><td class="num">3,064</td><td>PAN-OS</td></tr>
+      <tr><td>Application Activity</td><td colspan="2">No events collected</td><td>&mdash;</td></tr>
+      <tr><td>Discovery</td><td colspan="2">No events collected</td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+  <figure class="diagram">
+    <img src="layers.svg" alt="Four telemetry planes; the intrusion passes the detected perimeter and three absent inner planes to reach the crown jewels">
+    <figcaption><strong>Figure 1.</strong> The perimeter detects but does not block; the three inner planes collect nothing, so the intrusion runs unseen to cloud data, AD and PII.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="num">3</span>The ARTEX Kill Chain Against Your Controls</h2>
+  <p>ARTEX runs real offensive tools (nmap, nuclei, httpx, ffuf, sqlmap, dalfox, bbot) through LLM-driven worker agents, chaining stages at machine speed. Figure 2 places each stage against your current coverage.</p>
+  <figure class="diagram">
+    <img src="chain.svg" alt="Seven-stage attack chain; recon and C2/exfil detected, the five middle stages are gaps">
+    <figcaption><strong>Figure 2.</strong> Two of seven stages are detected; the five middle stages have no coverage. Break the chain at C2 and exfiltration today while you build the inner planes.</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th>Tactic</th><th class="nowrap">Technique</th><th>Observed ARTEX behaviour</th><th class="nowrap">Coverage</th></tr></thead>
+    <tbody>
+      <tr><td>Recon</td><td>T1595</td><td>Active scanning, directory fuzzing across 500+ requests.</td><td><span class="sev sev-low">Covered</span></td></tr>
+      <tr><td>Initial Access</td><td>T1190, T1078</td><td>Web exploits (SQLi, SSRF, XXE, SSTI), valid and stolen accounts.</td><td><span class="sev sev-medium">Partial</span></td></tr>
+      <tr><td>Persistence</td><td>T1505.003</td><td>JSP/PHP web shells; open-source RATs (WISP, vshell, AdaptixC2).</td><td><span class="sev sev-high">Gap</span></td></tr>
+      <tr><td>PrivEsc / Creds</td><td>T1558.003, T1552.005</td><td>Kerberoasting, cloud metadata API, SAML token forgery.</td><td><span class="sev sev-high">Gap</span></td></tr>
+      <tr><td>Lateral Move</td><td>T1550, T1021.006</td><td>Pass-the-Hash, Pass-the-Ticket, WinRM, SMB relay.</td><td><span class="sev sev-high">Gap</span></td></tr>
+      <tr><td>Collection</td><td>T1530, T1114.002</td><td>Mass cloud-storage reads, remote mailbox collection.</td><td><span class="sev sev-high">Gap</span></td></tr>
+      <tr><td>C2 &amp; Exfil</td><td>T1071.001, T1090</td><td>LLM API C2, multi-hop proxy, HTTPS exfil to rotating webhooks.</td><td><span class="sev sev-low">Covered</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <p class="section-label">Analyst note</p>
+    <p>ARTEX TTPs are drawn from a simulated FBI FLASH advisory for this study; real behaviour varies with operator goals and the model driving the agents.<sup>[2]</sup> Partial verdicts depend on deployment: inline inbound inspection, TLS decryption at the proxy, and internal segmentation logging. Verify these before relying on edge visibility for inbound exploitation or lateral movement. OCSF volume is treated as a proxy for detection capability, so an empty category is the firm signal; a high count means collection exists, not that a tuned rule fires.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">4</span>Which Gap to Close First</h2>
+  <p>Figure 3 ranks the gaps by how likely an intrusion there goes undetected against its business impact. The top-right items earn the first investment.</p>
+  <div class="grid-2">
+    <div>
+      <figure class="diagram">
+        <img src="matrix.svg" alt="Priority matrix of coverage gaps by likelihood of going undetected and business impact">
+        <figcaption><strong>Figure 3.</strong> Qualitative priority. Cloud and endpoint gaps are both high-impact and near-certain to go unseen today.</figcaption>
+      </figure>
+    </div>
+    <div>
+      <h3>Reading the matrix</h3>
+      <p>Cloud and SaaS compromise sits top-right: it carries the supply-chain and mass-PII outcomes and leaves no trace in your current lake.</p>
+      <p>Endpoint intrusion is the same height: web shells, RATs and credential theft all run on hosts you do not log.</p>
+      <p>C2 and exfil sit low on likelihood because you already detect them. That is the chokepoint to exploit now, not the gap to fund.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">5</span>Closing the Gap by Telemetry Plane</h2>
+  <p>Ordered by impact against the ARTEX kill chain, not by effort. Each plane converts a block of gap techniques to detectable.</p>
+  <table>
+    <thead><tr><th>Priority</th><th>Telemetry plane</th><th>Converts these ARTEX techniques</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sev sev-critical">1</span></td><td>Endpoint / EDR</td><td class="desc">Web shells, PowerShell, token theft, local staging, security-software discovery (~12 techniques).</td><td>SOC Eng</td></tr>
+      <tr><td><span class="sev sev-critical">2</span></td><td>Cloud / SaaS audit</td><td class="desc">Cloud discovery, cloud account and role abuse, SAML forgery, cloud storage and secrets, supply chain.</td><td>Cloud, IAM</td></tr>
+      <tr><td><span class="sev sev-high">3</span></td><td>Application layer</td><td class="desc">IDOR and sequential record access behind the 67K-record theft; mass data reads.</td><td>App Owners</td></tr>
+      <tr><td><span class="sev sev-high">4</span></td><td>Domain controller / Windows</td><td class="desc">Kerberoasting, Pass-the-Hash, Pass-the-Ticket, domain discovery, GPP, SMB relay.</td><td>AD Team</td></tr>
+      <tr><td><span class="sev sev-medium">5</span></td><td>Egress analytics (have it)</td><td class="desc">LLM API C2, sequential enumeration, bulk exfil. No new data source; tune rules now.</td><td>SOC</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2><span class="num">A</span>Sources</h2>
+  <ol class="sources">
+    <li>Anomali ThreatStream, OCSF lookup table (sandbox), aggregated by category_name and class_name; 17 Nov 2026.</li>
+    <li>FBI FLASH-20261113-001, "Threat Overview of ARTEX Autonomous Penetration Testing Framework," TLP:CLEAR, 13 Nov 2026 (simulated, for this study).</li>
+    <li>ARTEX repository: Dockerfile toolchain, agent/worker execution model; MITRE ATT&amp;CK Enterprise; OCSF schema.</li>
+  </ol>
+</section>
+
+<p class="doc-end">Estimative language follows standard intelligence scales. Confidence reflects source quality and corroboration, not likelihood. Simulated, authorised hands-on study; no live system was tested.</p>
+</body>
+</html>
